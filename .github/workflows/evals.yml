@@ -17,8 +17,8 @@ jobs:
   evals:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8
         with:
           python-version: "3.12"
       - name: Install
@@ -32,7 +32,7 @@ jobs:
           --effort "${{ inputs.effort }}"
       - name: Upload report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evals-report
           path: |
