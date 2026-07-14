@@ -56,7 +56,10 @@ def main() -> None: ...
 @click.option(
     "--include-untracked",
     is_flag=True,
-    help="Local mode: include brand-new (untracked) files in the review.",
+    help=(
+        "Local mode: include brand-new (untracked) files in the review "
+        "(working-tree diff only; ignored when a BASE is given)."
+    ),
 )
 @click.option("--dry-run", is_flag=True, help="Review but do not post to GitHub.")
 @click.option("--json", "json_output", is_flag=True, help="Print the result as JSON.")
