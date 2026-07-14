@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "profile.py"
+line = 5
+category = "any"
+note = "cache key dropped user_id: one user can be served another user's profile"
+

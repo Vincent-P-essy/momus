@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "counter.py"
+line = 10
+category = "bug"
+note = "raising between acquire() and release() leaves the lock held forever"
+

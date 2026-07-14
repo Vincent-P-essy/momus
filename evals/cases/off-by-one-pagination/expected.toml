@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "pages.py"
+line = 3
+category = "bug"
+note = "slice end is exclusive, the extra -1 drops the last item of every page"
+

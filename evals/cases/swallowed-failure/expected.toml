@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "sync.py"
+line = 13
+category = "bug"
+note = "reports success even when every retry failed (and errors are silently swallowed)"
+

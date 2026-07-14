@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "cleanup.py"
+line = 5
+category = "bug"
+note = "deleting from the dict while iterating it raises RuntimeError"
+

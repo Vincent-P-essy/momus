@@ -1,0 +1,8 @@
+# Planted findings for this case; empty means a clean diff.
+
+[[expected]]
+path = "tags.py"
+line = 1
+category = "bug"
+note = "mutable default argument is shared across calls"
+
