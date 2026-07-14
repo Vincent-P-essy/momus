@@ -36,16 +36,35 @@ from momus.models import (
 )
 
 
-def local_diff(repo_root: Path, base: str | None) -> tuple[PRInfo, str]:
-    """Diff the working tree against HEAD, or against `base...HEAD`."""
+def local_diff(
+    repo_root: Path, base: str | None, include_untracked: bool = False
+) -> tuple[PRInfo, str]:
+    """Diff the working tree against HEAD, or against `base...HEAD`.
+
+    With `include_untracked`, brand-new files appear in the working-tree diff
+    as additions: exactly those files are registered with
+    `git add --intent-to-add`, and exactly those paths are unregistered again
+    afterwards (path-scoped reset), so the caller's staged state is never
+    touched — even when the diff fails. A `base...HEAD` diff compares commits,
+    where uncommitted files cannot appear, so the flag is ignored there.
+    """
     target = f"{base}...HEAD" if base and base != "HEAD" else "HEAD"
+    registered: list[str] = []
+    if include_untracked and target == "HEAD":
+        registered = _untracked_files(repo_root)
+        if registered:
+            _run_git(repo_root, "add", "--intent-to-add", "--", *registered)
     command = ["git", "-C", str(repo_root), "diff", "--no-color", "--no-ext-diff", target]
     try:
-        proc = subprocess.run(command, capture_output=True, text=True, timeout=60, check=False)
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise DiffError(f"could not run git diff: {exc}") from exc
-    if proc.returncode != 0:
-        raise DiffError(f"git diff failed: {proc.stderr.strip() or proc.stdout.strip()}")
+        try:
+            proc = subprocess.run(command, capture_output=True, text=True, timeout=60, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise DiffError(f"could not run git diff: {exc}") from exc
+        if proc.returncode != 0:
+            raise DiffError(f"git diff failed: {proc.stderr.strip() or proc.stdout.strip()}")
+    finally:
+        if registered:
+            _run_git(repo_root, "reset", "--quiet", "--", *registered)
     pr = PRInfo(
         number=0,
         title=f"Local changes ({target})",
@@ -57,6 +76,37 @@ def local_diff(repo_root: Path, base: str | None) -> tuple[PRInfo, str]:
         draft=False,
     )
     return pr, proc.stdout
+
+
+def _run_git(repo_root: Path, *args: str) -> None:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), *args],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DiffError(f"git {args[0]} failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise DiffError(f"git {args[0]} failed: {proc.stderr.strip()}")
+
+
+def _untracked_files(repo_root: Path) -> list[str]:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), "ls-files", "--others", "--exclude-standard", "-z"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DiffError(f"could not list untracked files: {exc}") from exc
+    if proc.returncode != 0:
+        raise DiffError(f"git ls-files failed: {proc.stderr.strip()}")
+    return [path for path in proc.stdout.split("\0") if path]
 
 
 def run_review(

@@ -169,6 +169,69 @@ def test_local_diff_against_head(tmp_path: Path) -> None:
     assert "+x = 2" in diff_text
 
 
+def _git_out(repo: Path, *args: str) -> str:
+    proc = subprocess.run(
+        ["git", "-C", str(repo), *args], check=True, capture_output=True, text=True
+    )
+    return proc.stdout
+
+
+def test_local_diff_includes_untracked_files(tmp_path: Path) -> None:
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    (tmp_path / "f.py").write_text("x = 1\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "init")
+    (tmp_path / "brand_new.py").write_text("y = 2\n")
+
+    _, without = local_diff(tmp_path, None)
+    assert "brand_new.py" not in without
+
+    _, with_untracked = local_diff(tmp_path, None, include_untracked=True)
+    assert "brand_new.py" in with_untracked
+    assert "+y = 2" in with_untracked
+    # The file is untracked again afterwards, not left registered in the index.
+    assert "?? brand_new.py" in _git_out(tmp_path, "status", "--porcelain")
+
+
+def test_include_untracked_preserves_staged_state(tmp_path: Path) -> None:
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    (tmp_path / "f.py").write_text("x = 1\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "init")
+    # The user deliberately staged a change before running the review.
+    (tmp_path / "f.py").write_text("x = 1\nz = 3\n")
+    _git(tmp_path, "add", "f.py")
+    (tmp_path / "brand_new.py").write_text("y = 2\n")
+
+    _, diff_text = local_diff(tmp_path, None, include_untracked=True)
+    assert "brand_new.py" in diff_text
+    assert _git_out(tmp_path, "diff", "--cached", "--name-only").split() == ["f.py"]
+
+
+def test_include_untracked_is_ignored_for_commit_diffs(tmp_path: Path) -> None:
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    (tmp_path / "f.py").write_text("x = 1\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "one")
+    (tmp_path / "f.py").write_text("x = 2\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "two")
+    base = _git_out(tmp_path, "rev-parse", "HEAD~1").strip()
+    (tmp_path / "brand_new.py").write_text("y = 2\n")
+
+    _, diff_text = local_diff(tmp_path, base, include_untracked=True)
+    assert "+x = 2" in diff_text
+    assert "brand_new.py" not in diff_text
+    # No index manipulation happened at all for a commit-to-commit diff.
+    assert "?? brand_new.py" in _git_out(tmp_path, "status", "--porcelain")
+
+
 def test_local_diff_errors_without_git_history(tmp_path: Path) -> None:
     with pytest.raises(DiffError):
         local_diff(tmp_path, None)
