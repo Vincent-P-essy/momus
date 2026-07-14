@@ -116,9 +116,10 @@ momus review --repo owner/name --pr 123              # post the review
 Review your own working tree before you even push — no GitHub involved:
 
 ```sh
-momus review --local              # working tree vs HEAD
-momus review --local main        # your branch vs main
-momus review --local --json      # machine-readable result
+momus review --local                       # working tree vs HEAD
+momus review --local main                 # your branch vs main
+momus review --local --include-untracked  # brand-new files too
+momus review --local --json               # machine-readable result
 ```
 
 `--fail-on major` turns the review into a CI gate (exit code 2 when a finding
@@ -187,6 +188,23 @@ uv run python evals/run.py                    # full run, writes evals/report.md
 uv run python evals/run.py --no-verify        # quantify what verification buys
 uv run python evals/run.py --model claude-sonnet-5 --effort medium
 ```
+
+### Latest results
+
+Run in CI on 2026-07-14 — `claude-opus-4-8`, effort `high`, verification on,
+prompt `2026-07-14.1`:
+
+| metric | value |
+|---|---|
+| recall on the 8 planted bugs | **8/8 = 1.00** |
+| precision | **0.89** |
+| F1 | **0.94** |
+| comments on the 3 clean diffs | **0** |
+| total cost, 11 cases | **$0.53** |
+
+The single "false positive" was a second, arguably legitimate finding on the
+`swallowed-failure` case (`except Exception: pass` with an unused logger) that
+the labels hadn't anticipated — the scoring is deliberately unforgiving.
 
 The report tracks precision, recall, F1, verifier rejections and cost per
 case, keyed to the prompt version — so prompt and model changes are judged by
