@@ -1,0 +1,40 @@
+# On-demand eval run (costs real API tokens, so never triggered automatically).
+name: Evals
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Reviewer model id"
+        required: false
+        default: "claude-opus-4-8"
+      effort:
+        description: "Effort level"
+        required: false
+        default: "high"
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv sync --dev
+      - name: Run evals
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: >-
+          uv run python evals/run.py
+          --model "${{ inputs.model }}"
+          --effort "${{ inputs.effort }}"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evals-report
+          path: |
+            evals/report.md
+            evals/report.json

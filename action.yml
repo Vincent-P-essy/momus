@@ -1,0 +1,58 @@
+name: "Momus Code Review"
+description: >-
+  AI code review that investigates the repository before it judges, and only
+  posts findings that survive an adversarial verification pass.
+author: "Vincent Plessy"
+branding:
+  icon: "eye"
+  color: "purple"
+
+inputs:
+  anthropic-api-key:
+    description: "Anthropic API key used to run the review."
+    required: true
+  github-token:
+    description: "Token used to read the PR and post the review."
+    required: false
+    default: ${{ github.token }}
+  pr-number:
+    description: "Pull request number to review."
+    required: true
+  model:
+    description: "Reviewer model id (empty = momus default)."
+    required: false
+    default: ""
+  budget-usd:
+    description: "Hard USD budget for the run (empty = momus default)."
+    required: false
+    default: ""
+  extra-args:
+    description: "Extra flags passed verbatim to `momus review`."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install momus
+      shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+
+    - name: Review the pull request
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        MOMUS_MODEL_INPUT: ${{ inputs.model }}
+        MOMUS_BUDGET_INPUT: ${{ inputs.budget-usd }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      run: |
+        args=(--repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER")
+        [ -n "$MOMUS_MODEL_INPUT" ] && args+=(--model "$MOMUS_MODEL_INPUT")
+        [ -n "$MOMUS_BUDGET_INPUT" ] && args+=(--budget "$MOMUS_BUDGET_INPUT")
+        momus review "${args[@]}" ${{ inputs.extra-args }}
