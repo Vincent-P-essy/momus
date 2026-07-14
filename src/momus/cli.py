@@ -53,6 +53,11 @@ def main() -> None: ...
 @click.option("--budget", "budget_usd", type=float, help="Hard USD budget for the run.")
 @click.option("--max-findings", type=int, help="Cap on posted findings.")
 @click.option("--no-verify", is_flag=True, help="Skip the adversarial verification pass.")
+@click.option(
+    "--include-untracked",
+    is_flag=True,
+    help="Local mode: include brand-new (untracked) files in the review.",
+)
 @click.option("--dry-run", is_flag=True, help="Review but do not post to GitHub.")
 @click.option("--json", "json_output", is_flag=True, help="Print the result as JSON.")
 @click.option(
@@ -73,6 +78,7 @@ def review(
     budget_usd: float | None,
     max_findings: int | None,
     no_verify: bool,
+    include_untracked: bool,
     dry_run: bool,
     json_output: bool,
     fail_on: str | None,
@@ -93,7 +99,9 @@ def review(
             max_findings=max_findings,
             verify=False if no_verify else None,
         )
-        result = _run(root, cfg, repo_slug, pr_number, local_base, dry_run, json_output)
+        result = _run(
+            root, cfg, repo_slug, pr_number, local_base, include_untracked, dry_run, json_output
+        )
     except MomusError as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -110,11 +118,16 @@ def _run(
     repo_slug: str | None,
     pr_number: int | None,
     local_base: str | None,
+    include_untracked: bool,
     dry_run: bool,
     json_output: bool,
 ) -> ReviewResult:
     if local_base is not None:
-        pr, diff_text = local_diff(root, None if local_base == "HEAD" else local_base)
+        pr, diff_text = local_diff(
+            root,
+            None if local_base == "HEAD" else local_base,
+            include_untracked=include_untracked,
+        )
         result = run_review(root, pr, diff_text, cfg)
         _emit(result, json_output)
         return result

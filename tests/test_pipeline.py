@@ -169,6 +169,23 @@ def test_local_diff_against_head(tmp_path: Path) -> None:
     assert "+x = 2" in diff_text
 
 
+def test_local_diff_includes_untracked_files(tmp_path: Path) -> None:
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    (tmp_path / "f.py").write_text("x = 1\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "init")
+    (tmp_path / "brand_new.py").write_text("y = 2\n")
+
+    _, without = local_diff(tmp_path, None)
+    assert "brand_new.py" not in without
+
+    _, with_untracked = local_diff(tmp_path, None, include_untracked=True)
+    assert "brand_new.py" in with_untracked
+    assert "+y = 2" in with_untracked
+
+
 def test_local_diff_errors_without_git_history(tmp_path: Path) -> None:
     with pytest.raises(DiffError):
         local_diff(tmp_path, None)

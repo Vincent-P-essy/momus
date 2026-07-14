@@ -36,9 +36,18 @@ from momus.models import (
 )
 
 
-def local_diff(repo_root: Path, base: str | None) -> tuple[PRInfo, str]:
-    """Diff the working tree against HEAD, or against `base...HEAD`."""
+def local_diff(
+    repo_root: Path, base: str | None, include_untracked: bool = False
+) -> tuple[PRInfo, str]:
+    """Diff the working tree against HEAD, or against `base...HEAD`.
+
+    With `include_untracked`, brand-new files appear in the diff as additions:
+    they are registered with `git add --intent-to-add` for the duration of the
+    diff and the index is reset afterwards.
+    """
     target = f"{base}...HEAD" if base and base != "HEAD" else "HEAD"
+    if include_untracked:
+        _run_git(repo_root, "add", "--intent-to-add", "--all")
     command = ["git", "-C", str(repo_root), "diff", "--no-color", "--no-ext-diff", target]
     try:
         proc = subprocess.run(command, capture_output=True, text=True, timeout=60, check=False)
@@ -46,6 +55,8 @@ def local_diff(repo_root: Path, base: str | None) -> tuple[PRInfo, str]:
         raise DiffError(f"could not run git diff: {exc}") from exc
     if proc.returncode != 0:
         raise DiffError(f"git diff failed: {proc.stderr.strip() or proc.stdout.strip()}")
+    if include_untracked:
+        _run_git(repo_root, "reset", "--quiet")
     pr = PRInfo(
         number=0,
         title=f"Local changes ({target})",
@@ -57,6 +68,21 @@ def local_diff(repo_root: Path, base: str | None) -> tuple[PRInfo, str]:
         draft=False,
     )
     return pr, proc.stdout
+
+
+def _run_git(repo_root: Path, *args: str) -> None:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), *args],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DiffError(f"git {args[0]} failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise DiffError(f"git {args[0]} failed: {proc.stderr.strip()}")
 
 
 def run_review(

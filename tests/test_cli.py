@@ -31,7 +31,10 @@ def runner() -> CliRunner:
 @pytest.fixture
 def patched_local(monkeypatch: pytest.MonkeyPatch) -> None:
     pr = PRInfo(0, "Local changes", "", "", "HEAD", "worktree", "", False)
-    monkeypatch.setattr("momus.cli.local_diff", lambda root, base: (pr, "diff"))
+    monkeypatch.setattr(
+        "momus.cli.local_diff",
+        lambda root, base, include_untracked=False: (pr, "diff"),
+    )
     monkeypatch.setattr("momus.cli.run_review", lambda root, pr, diff, cfg, **kw: _canned_result())
 
 
