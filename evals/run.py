@@ -29,10 +29,11 @@ import shutil
 import subprocess
 import sys
 import time
-import tomllib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+
+import tomllib
 
 from momus.config import MomusConfig
 from momus.github import PRInfo

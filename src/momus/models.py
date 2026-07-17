@@ -8,17 +8,17 @@ malformed model output is rejected at the boundary.
 from __future__ import annotations
 
 import hashlib
-from enum import StrEnum
+from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class Side(StrEnum):
+class Side(str, Enum):
     LEFT = "LEFT"
     RIGHT = "RIGHT"
 
 
-class Category(StrEnum):
+class Category(str, Enum):
     BUG = "bug"
     SECURITY = "security"
     PERFORMANCE = "performance"
@@ -28,7 +28,7 @@ class Category(StrEnum):
     DOCS = "docs"
 
 
-class Severity(StrEnum):
+class Severity(str, Enum):
     BLOCKER = "blocker"
     MAJOR = "major"
     MINOR = "minor"
@@ -44,13 +44,13 @@ SEVERITY_RANK: dict[Severity, int] = {
 }
 
 
-class Confidence(StrEnum):
+class Confidence(str, Enum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
 
 
-class EvidenceKind(StrEnum):
+class EvidenceKind(str, Enum):
     REPO = "repo"
     DIFF = "diff"
     DOC = "doc"
@@ -102,7 +102,7 @@ class Finding(BaseModel):
         return (SEVERITY_RANK[self.severity], self.path, self.line)
 
 
-class Verdict(StrEnum):
+class Verdict(str, Enum):
     UPHOLD = "uphold"
     REVISE = "revise"
     REJECT = "reject"

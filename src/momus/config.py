@@ -9,9 +9,14 @@
 from __future__ import annotations
 
 import os
-import tomllib
+import sys
 from pathlib import Path
 from typing import Any
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
