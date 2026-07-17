@@ -30,16 +30,21 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
-import tomllib
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from momus.config import MomusConfig
 from momus.github import PRInfo
 from momus.models import Finding, ReviewResult
 from momus.pipeline import run_review
 from momus.prompts import PROMPT_VERSION
+
+UTC = timezone.utc
 
 EVALS_DIR = Path(__file__).resolve().parent
 CASES_DIR = EVALS_DIR / "cases"
