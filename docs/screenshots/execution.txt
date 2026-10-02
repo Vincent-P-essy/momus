@@ -1,0 +1,37 @@
+$ python -m pytest -v --tb=short tests/test_diff_parser.py tests/test_anchors.py
+======================================= test session starts ========================================
+platform linux -- Python 3.12.14, pytest-8.4.2, pluggy-1.6.0 -- python
+cachedir: .pytest_cache
+rootdir: momus
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 23 items
+
+tests/test_diff_parser.py::test_parse_modified_file PASSED                                   [  4%]
+tests/test_diff_parser.py::test_count_changes PASSED                                         [  8%]
+tests/test_diff_parser.py::test_added_and_deleted_files PASSED                               [ 13%]
+tests/test_diff_parser.py::test_rename_without_content_change PASSED                         [ 17%]
+tests/test_diff_parser.py::test_rename_with_edits PASSED                                     [ 21%]
+tests/test_diff_parser.py::test_binary_file PASSED                                           [ 26%]
+tests/test_diff_parser.py::test_quoted_unicode_path PASSED                                   [ 30%]
+tests/test_diff_parser.py::test_path_with_spaces PASSED                                      [ 34%]
+tests/test_diff_parser.py::test_no_newline_marker PASSED                                     [ 39%]
+tests/test_diff_parser.py::test_preamble_is_ignored PASSED                                   [ 43%]
+tests/test_diff_parser.py::test_empty_diff PASSED                                            [ 47%]
+tests/test_diff_parser.py::test_truncated_hunk_raises PASSED                                 [ 52%]
+tests/test_diff_parser.py::test_render_carries_anchors PASSED                                [ 56%]
+tests/test_diff_parser.py::test_render_diff_truncates_whole_files PASSED                     [ 60%]
+tests/test_anchors.py::test_exact_add_line_resolves PASSED                                   [ 65%]
+tests/test_anchors.py::test_context_line_resolves_on_right PASSED                            [ 69%]
+tests/test_anchors.py::test_snaps_to_nearest_within_window PASSED                            [ 73%]
+tests/test_anchors.py::test_far_line_is_unanchorable PASSED                                  [ 78%]
+tests/test_anchors.py::test_unknown_file_is_unanchorable PASSED                              [ 82%]
+tests/test_anchors.py::test_left_side_deletion_resolves PASSED                               [ 86%]
+tests/test_anchors.py::test_side_flip_when_only_other_side_matches PASSED                    [ 91%]
+tests/test_anchors.py::test_valid_range_is_kept PASSED                                       [ 95%]
+tests/test_anchors.py::test_invalid_range_falls_back_to_single_line PASSED                   [100%]
+
+======================================== 23 passed in 0.03s ========================================
+
+Exit: 0
