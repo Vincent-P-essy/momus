@@ -15,12 +15,6 @@ around every hunk, searching for the project's own conventions, checking
 callers — then drafts findings that must survive an **adversarial
 verification pass** before a single comment reaches the PR.
 
-## Execution preview
-
-![momus execution](docs/screenshots/execution.png)
-
-Local execution of `python -m pytest -v --tb=short tests/test_diff_parser.py tests/test_anchors.py`. The input and output shown come from the repository example or test fixtures. [Verification](docs/verification.md).
-
 ## Why another AI reviewer?
 
 Most LLM reviewers fail the same way, and it isn't missed bugs — it's noise.
